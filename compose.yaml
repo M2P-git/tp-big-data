@@ -1,0 +1,63 @@
+# Environnement des TP du module Big Data et NoSQL (mois 1).
+#
+# Un profil par bloc : on ne lance que ce dont la séance a besoin.
+#   docker compose --profile socle up -d      # S2 : Jupyter (Python, pandas, PySpark)
+#   docker compose --profile hadoop up -d     # S3 et S4 : cluster Hadoop
+#   docker compose --profile hadoop down      # arrête ET efface le cluster
+#
+# Images : à télécharger une fois (ou à charger depuis la clé USB, voir README).
+
+name: bigdata-nosql
+
+x-hadoop: &hadoop
+  image: apache/hadoop:3.5.0          # image officielle, amd64 et arm64
+  env_file: ./hadoop/hadoop.env
+  profiles: ["hadoop"]
+  networks: [cluster]
+
+services:
+
+  # ---------------------------------------------------------------- socle
+  jupyter:
+    image: quay.io/jupyter/pyspark-notebook:latest   # épingler un tag daté pour l'année
+    profiles: ["socle"]
+    ports:
+      - "8888:8888"
+    mem_limit: 2g                     # limite volontaire : c'est le sujet de S2
+    volumes:
+      - ./:/home/jovyan/work
+    command: ["start-notebook.py", "--IdentityProvider.token=", "--ServerApp.root_dir=/home/jovyan/work"]
+    networks: [cluster]
+
+  # ---------------------------------------------------------------- hadoop
+  namenode:
+    <<: *hadoop
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"                   # interface web HDFS : http://localhost:9870
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"   # formatage au premier démarrage
+    volumes:
+      - ./data:/data                  # fichiers locaux à charger dans HDFS
+      - ./tp:/tp                      # scripts des TP (mappers, reducers)
+
+  datanode:
+    <<: *hadoop
+    command: ["hdfs", "datanode"]
+    deploy:
+      replicas: 4                     # 4 DataNodes pour une réplication x3
+
+  resourcemanager:
+    <<: *hadoop
+    hostname: resourcemanager
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"                   # interface web YARN : http://localhost:8088
+
+  nodemanager:
+    <<: *hadoop
+    command: ["yarn", "nodemanager"]
+
+networks:
+  cluster: {}

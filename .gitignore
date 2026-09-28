@@ -1,0 +1,16 @@
+# Données volumineuses : jamais dans git (clé USB ou générateur)
+data/*.csv
+data/*.tsv
+data/*.parquet
+!data/echantillon/*
+
+# Sorties des TP
+tp/**/sortie_*/
+tp/**/*.aux
+tp/**/*.log
+
+# Python et Jupyter
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
