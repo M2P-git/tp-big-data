@@ -30,6 +30,19 @@ python scripts/generer_clickstream.py --taille 1.5G --sortie data/clickstream_ao
 
 Les options `--lignes`, `--jours`, `--produits`, `--clients` et `--graine` règlent le reste. Avec la même graine, on obtient toujours le même fichier.
 
+### Un échantillon, pas le clickstream complet
+
+Le fichier du TP est un **échantillon** du clickstream de Qissaria, assez petit pour un ordinateur portable :
+
+| | Clickstream complet de Qissaria | Fichier du TP |
+| --- | --- | --- |
+| Visites | toutes : 250 000 par jour | environ une visite sur cinq |
+| Événements gardés | tous (pages, recherches, clics) : 30 par visite | seulement vues, paniers et achats : environ 8 par visite |
+| Période | en continu | du 1er au 30 août 2026 |
+| Taille | environ 1 Go par jour | 1,5 Go pour le mois (10 973 703 lignes) |
+
+Les calculs de volumétrie du cours (S1) portent sur le clickstream complet ; les TP, sur l'échantillon.
+
 Les scripts des TP fonctionnent aussi sur le vrai jeu REES46 (mêmes colonnes) : un mois de ce jeu pèse plusieurs gigaoctets.
 
 ## Les avis clients

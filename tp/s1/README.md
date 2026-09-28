@@ -10,25 +10,27 @@ Fiches à imprimer : [`fiches_mapreduce_papier.pdf`](fiches_mapreduce_papier.pdf
 
 Six groupes comptent les mots de six fragments d'avis clients, échangent des post-it selon la lettre initiale, puis additionnent. Gardez vos post-it : en S4, vous écrirez le même traitement en Python et vous le lancerez sur un cluster Hadoop.
 
-## 2. Estimer la volumétrie de Qissaria (20 min)
+## 2. La volumétrie de Qissaria (30 min)
 
-Hypothèses (fictives, mais réalistes pour une place de marché régionale) :
+La méthode est expliquée en cours, et dans le support (chapitre 1, « Estimer une volumétrie »), sur l'exemple du clickstream : taille d'un événement, volume par jour, durée de conservation, croissance, copies, marge. Elle aboutit à 5,0 To répliqués sur 3 ans, soit 7,2 To de disques.
+
+À vous de l'appliquer aux autres données, en équipes (10 min), avec ces hypothèses (fictives, mais réalistes pour une place de marché régionale) :
 
 | Donnée | Valeur |
 | --- | --- |
 | Visites par jour | 250 000 |
 | Événements par visite | 30 |
 | Taille d'un événement | 140 octets |
+| Croissance du trafic | +40 % par an |
 | Produits au catalogue | 60 000, avec 6 photos de 400 Ko chacun |
 | Facteur de réplication | 3 |
+| Espace libre à garder | 30 % |
 
 Questions :
 
-1. Volume de clickstream par jour, par an ?
-2. Volume stocké au bout de 3 ans si le trafic augmente de 40 % par an, réplication comprise ?
-3. Volume des photos, réplication comprise ?
-4. Combien de disques de 4 To faut-il en tout, si on garde 30 % d'espace libre ?
-5. Ces données tiennent-elles sur un seul serveur ? Et si l'on ajoute les journaux techniques des serveurs web, dix fois plus volumineux que le clickstream ?
+1. Les photos : quel volume, avec 3 copies ?
+2. Clickstream et photos ensemble, avec 30 % de marge : combien de disques de 4 To ?
+3. Qissaria veut aussi garder les journaux de ses serveurs web, dix fois plus volumineux que le clickstream. Quel volume brut (sans les copies) sur 3 ans ? Combien de temps faut-il pour tout relire une fois, à 200 Mo/s ?
 
 Écrivez chaque calcul avec ses unités : c'est ce qui est noté au contrôle.
 
