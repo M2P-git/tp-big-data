@@ -1,0 +1,44 @@
+% Fiches imprimables pour l'activité « MapReduce sur papier » (S1, sans ordinateur).
+% Compilation : xelatex (ou pdflatex) fiches_mapreduce_papier.tex
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\else\usepackage{fontspec}\fi
+\IfFileExists{french.ldf}{\usepackage[french]{babel}}{\usepackage[provide=*]{babel}\babelprovide[import,main]{french}}
+\usepackage[margin=18mm]{geometry}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\pagestyle{empty}
+\newcommand{\fiche}[2]{%
+\begin{tcolorbox}[colback=blue!3,colframe=blue!50!black,title={\large Groupe #1 : votre fragment d'avis clients}]
+\Large #2
+\end{tcolorbox}\vspace{3mm}}
+\begin{document}
+
+\section*{MapReduce sur papier : consignes}
+Qissaria a reçu des milliers d'avis clients. Salma veut savoir quels mots reviennent le plus. Un seul lecteur mettrait des heures : la classe va se répartir le travail.
+
+\begin{enumerate}[leftmargin=*,itemsep=4pt]
+\item \textbf{Étape 1 (5 min), chaque groupe seul :} comptez les mots de \emph{votre} fragment. On ne compte que les mots d'au moins 4 lettres, en minuscules (« Qualité » et « qualité » sont le même mot).
+\item \textbf{Étape 2 (3 min) :} écrivez un post-it par mot distinct, sous la forme \texttt{mot : nombre}.
+\item \textbf{Étape 3 (5 min) :} portez chaque post-it au groupe responsable de la lettre initiale du mot :
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+Groupe 1 & Groupe 2 & Groupe 3 & Groupe 4 & Groupe 5 & Groupe 6\\\hline
+A à C & D à H & I à L & M à P & Q à S & T à Z\\\hline
+\end{tabular}
+\end{center}
+\item \textbf{Étape 4 (5 min) :} chaque groupe additionne les post-it reçus, mot par mot, et écrit ses totaux au tableau.
+\item \textbf{Étape 5 :} la classe lit les 10 mots les plus fréquents. Quel groupe a fini en dernier ? Pourquoi ?
+\end{enumerate}
+
+\vspace{4mm}
+\noindent\textit{Découpez la page suivante en six fiches, une par groupe.}
+
+\newpage
+\fiche{1}{Livraison rapide et colis bien emballé. Le service client répond vite. Qualité correcte pour le prix, je recommande Qissaria à ma famille.}
+\fiche{2}{Colis arrivé en retard, livraison trop lente. Le service client ne répond pas. Qualité moyenne, prix trop élevé. Déçu par Qissaria.}
+\fiche{3}{Tapis mzyan bzaf, livraison rapide. Prix correct, qualité au rendez-vous. Service client aimable, colis bien emballé. Merci Qissaria.}
+\fiche{4}{Téléphone reçu en deux jours, livraison rapide. Qualité excellente, prix raisonnable. Je recommande ce service à tous mes amis.}
+\fiche{5}{Livraison lente, colis abîmé, téléphone rayé. Service client injoignable, remboursement trop long. Qualité décevante pour ce prix.}
+\fiche{6}{Lampe zwina bzaf, livraison rapide, colis complet. Qualité parfaite, prix bas. Service client efficace, merci Qissaria, je recommande.}
+\end{document}
