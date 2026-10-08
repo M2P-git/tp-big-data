@@ -1,0 +1,5 @@
+# Les fichiers de ce dépôt sont montés dans des conteneurs Linux (hadoop.env, scripts
+# Python, échantillons de données) : toujours des fins de ligne LF, même sous Windows.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
