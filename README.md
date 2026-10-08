@@ -25,7 +25,7 @@ Ce dépôt contient tout ce qu'il faut pour les manipulations : l'environnement 
 
 ## Prérequis
 
-- Docker Desktop récent (Windows, macOS ou Linux ; processeur x86 ou ARM).
+- Docker Desktop récent (Windows, macOS ou Linux). Processeur x86 de préférence : sur ARM, le cluster Hadoop tourne en émulation (lent, voir « Images utilisées »).
 - 8 Go de RAM (on ne lance qu'un profil à la fois) et 15 Go de disque libre.
 - Python 3.9 ou plus sur la machine, pour les scripts de vérification et de génération.
 - Git.
@@ -78,5 +78,5 @@ python scripts/generer_clickstream.py --taille 1.5G --sortie data/clickstream_ao
 
 | Image | Rôle | Remarque |
 | --- | --- | --- |
-| `apache/hadoop:3.5.0` | NameNode, DataNodes, ResourceManager, NodeManager | image officielle Apache, Ubuntu 24.04, Java 17, amd64 et arm64 |
+| `apache/hadoop:3.5.0` | NameNode, DataNodes, ResourceManager, NodeManager | image officielle Apache, Ubuntu 24.04, Java 17, **amd64 seulement** : sur un processeur ARM (Mac M1 ou plus récent, Windows ARM), Docker l'émule, ce qui est nettement plus lent |
 | `quay.io/jupyter/pyspark-notebook` | Jupyter, pandas, PySpark | projet Jupyter Docker Stacks |
