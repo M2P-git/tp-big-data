@@ -8,8 +8,8 @@
 2. Cloner le dépôt, puis vérifier le poste depuis sa racine :
 
    ```bash
-   git clone <adresse du dépôt> bigdata-nosql-tp
-   cd bigdata-nosql-tp
+   git clone https://github.com/M2P-git/tp-big-data.git
+   cd tp-big-data
    python scripts/verifier_env.py
    ```
 

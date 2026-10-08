@@ -10,7 +10,7 @@
 name: bigdata-nosql
 
 x-hadoop: &hadoop
-  image: apache/hadoop:3.5.0          # image officielle, amd64 et arm64
+  image: apache/hadoop:3.5.0          # image officielle, amd64 seulement (émulée sur ARM)
   env_file: ./hadoop/hadoop.env
   profiles: ["hadoop"]
   networks: [cluster]
