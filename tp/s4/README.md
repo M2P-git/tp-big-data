@@ -61,7 +61,7 @@ hdfs dfs -cat /qissaria/sorties/evenements/part-*
 
 Pendant le calcul, suivre le job sur <http://localhost:8088>.
 
-**Q2.** Dans les compteurs affichés à la fin : combien de tâches map (*Launched map tasks*) ? Comparez au nombre de blocs vu en S3. Combien étaient *data-local* ?
+**Q2.** Dans les compteurs affichés à la fin : combien de tâches map (*Launched map tasks*) ? Comparez au nombre de blocs vu en S3 (si le total est plus grand, regardez *Killed map tasks* : ce sont des copies de secours). Combien étaient *data-local*, combien *rack-local* ? Comment l'expliquez-vous dans notre cluster ?
 
 **Q3.** Relancez avec un combiner (`-combiner "python3 reducer_somme.py"`, et un autre dossier de sortie). Comparez *Reduce shuffle bytes*.
 
