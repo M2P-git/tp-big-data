@@ -6,6 +6,8 @@ Le cluster du TP : 1 NameNode, 4 DataNodes, 1 ResourceManager et 1 NodeManager, 
 
 Aide-mémoire des commandes : [`aide_memoire_hdfs.md`](aide_memoire_hdfs.md). Répondez aux questions dans [`reponses_s3.md`](reponses_s3.md).
 
+Les transparents de la séance suivent les mêmes manipulations, numérotées en étapes : checkpoint 1 = étapes 1 et 2, checkpoint 2 = étape 3, checkpoint 3 = étape 4, `-printTopology` (défi) = étape 5, checkpoint 4 = étape 6.
+
 ## Checkpoint 1 : démarrer le cluster (15 min)
 
 Depuis la racine du dépôt, sur votre machine :

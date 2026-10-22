@@ -13,6 +13,8 @@ Le jeu papier de S1 porte enfin son nom : **MapReduce**. On l'écrit en Python a
 | `simuler_mapreduce.py` | rejoue un job phase par phase sur votre machine | non |
 | `test_s4.py` | vérifie vos scripts sur l'échantillon | non |
 
+Les transparents de la séance suivent les mêmes manipulations, numérotées en étapes : démarrage = étape 1, checkpoint 1 = étapes 2 et 3, checkpoint 2 = étapes 4 et 5, checkpoint 3 = étape 6, checkpoint 4 = étape 7.
+
 Démarrer le cluster (arrêté en fin de S3) puis entrer dans le NameNode :
 
 ```bash
