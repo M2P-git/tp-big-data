@@ -1,44 +1,112 @@
 % Fiches imprimables pour l'activité « MapReduce sur papier » (S1, sans ordinateur).
+% Version pour 4 ou 5 étudiants : 4 machines, plus un « serveur seul » qui fait la course contre elles.
+% Une fiche recto-verso par personne : 5 fiches, soit 10 pages (imprimer en recto-verso).
 % Compilation : xelatex (ou pdflatex) fiches_mapreduce_papier.tex
 \documentclass[11pt,a4paper]{article}
 \usepackage{iftex}
 \ifPDFTeX\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\else\usepackage{fontspec}\fi
 \IfFileExists{french.ldf}{\usepackage[french]{babel}}{\usepackage[provide=*]{babel}\babelprovide[import,main]{french}}
-\usepackage[margin=18mm]{geometry}
+\usepackage[margin=15mm]{geometry}
+\usepackage[table]{xcolor} % \cellcolor du tableau des machines
 \usepackage{tcolorbox}
 \usepackage{enumitem}
+\usepackage{array}
 \pagestyle{empty}
-\newcommand{\fiche}[2]{%
-\begin{tcolorbox}[colback=blue!3,colframe=blue!50!black,title={\large Groupe #1 : votre fragment d'avis clients}]
-\Large #2
-\end{tcolorbox}\vspace{3mm}}
+\setlength{\parindent}{0pt}
+
+% Une couleur par machine (les mêmes que sur les transparents)
+\definecolor{m1}{HTML}{2A78D6}
+\definecolor{m2}{HTML}{EB6834}
+\definecolor{m3}{HTML}{1BAF7A}
+\definecolor{m4}{HTML}{EDA100}
+
+\newcommand{\avisun}{Livraison rapide et colis bien emballé. Le service client répond vite. Qualité correcte pour le prix, je recommande Qissaria à ma famille.}
+\newcommand{\avisdeux}{Colis arrivé en retard, livraison trop lente. Le service client ne répond pas. Qualité moyenne, prix trop cher. Déçu par Qissaria.}
+\newcommand{\avistrois}{Tapis mzyan bzaf, livraison rapide. Prix juste, qualité parfaite. Service client aimable, colis bien emballé. Merci Qissaria.}
+\newcommand{\avisquatre}{Lampe zwina bzaf, livraison rapide, colis complet. Qualité excellente, prix raisonnable. Service client efficace, merci Qissaria, je recommande.}
+
+\newcommand{\regles}{%
+\textbf{Les règles, les mêmes pour tous :} on ne compte que les mots d'\textbf{au moins 4 lettres} (\emph{le, en, ne, pas, par, je} sont ignorés) ; tout en \textbf{minuscules} (\emph{Qualité} et \emph{qualité} sont le même mot) ; on garde les accents.}
+
+\newcommand{\machines}{%
+\begin{center}\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|c|c|c|c|}\hline
+\cellcolor{m1!25}Machine 1 & \cellcolor{m2!25}Machine 2 & \cellcolor{m3!25}Machine 3 & \cellcolor{m4!25}Machine 4\\\hline
+A à F & G à M & N à S & T à Z\\\hline
+\end{tabular}\end{center}}
+
+% Lignes vides d'une grille
+\newcommand{\lmot}{ & & & \\\hline}
+\newcommand{\lsomme}{ & & & & & \\\hline}
+
+% Fiche d'une machine : \fichemachine{numéro}{couleur}{avis}{lettres}
+\newcommand{\fichemachine}[4]{%
+{\Large\textbf{Activité : diviser pour régner}}\hfill{\Large\textbf{\textcolor{#2!70!black}{Machine #1}}}\par\medskip
+\begin{tcolorbox}[colback=#2!8,colframe=#2,title={\large Votre avis (avis #1)}]
+\Large\hyphenpenalty=10000 #3
+\end{tcolorbox}
+\begin{tcolorbox}[colback=white,colframe=#2]
+\large À l'étape 4, vous additionnez les mots qui commencent par \textbf{#4}.
+\end{tcolorbox}
+\regles
+\machines
+\textbf{Les 4 étapes}
+\begin{enumerate}[itemsep=1pt,topsep=2pt]
+\item \textbf{Compter} (3 min) : écrivez dans la grille ci-dessous chaque mot de votre avis, \textbf{une seule fois}, avec le nombre de fois où il apparaît.
+\item \textbf{Trier} (3 min) : prenez 4 post-it et écrivez en haut de chacun : \textbf{pour M1}, \textbf{pour M2}, \textbf{pour M3}, \textbf{pour M4}. Recopiez chaque mot de la grille sur le post-it de la machine qui l'additionnera (tableau ci-dessus), avec son nombre.
+\item \textbf{Distribuer} (1 min) : gardez votre post-it, donnez les 3 autres à leur machine.
+\item \textbf{Additionner} (3 min) : au verso. Puis écrivez vos totaux au tableau et levez la main.
+\end{enumerate}
+\textbf{Étape 1 : les mots de votre avis}\par\smallskip
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|}\hline
+\textbf{mot} & \textbf{nombre} & \textbf{mot} & \textbf{nombre}\\\hline
+\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot
+\end{tabular}
+\newpage
+{\Large\textbf{Machine #1 : étape 4, additionner}}\par\medskip
+Posez vos 4 post-it côte à côte (le vôtre et les 3 reçus). Pour chaque mot qui commence par \textbf{#4}, recopiez le nombre lu sur chaque post-it (un tiret si le mot n'y est pas), puis faites le total.\par\medskip
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{|p{5.2cm}|*{4}{>{\centering\arraybackslash}p{2cm}|}>{\centering\arraybackslash}p{2cm}|}\hline
+\textbf{mot} & \textbf{post-it de l'avis 1} & \textbf{post-it de l'avis 2} & \textbf{post-it de l'avis 3} & \textbf{post-it de l'avis 4} & \textbf{total}\\\hline
+\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme\lsomme
+\end{tabular}
+\par\bigskip
+\textbf{Temps à l'arrivée :} \rule{3cm}{0.4pt}
+\newpage}
+
 \begin{document}
 
-\section*{MapReduce sur papier : consignes}
-Qissaria a reçu des milliers d'avis clients. Salma veut savoir quels mots reviennent le plus. Un seul lecteur mettrait des heures : la classe va se répartir le travail.
+\fichemachine{1}{m1}{\avisun}{A, B, C, D, E ou F}
+\fichemachine{2}{m2}{\avisdeux}{G, H, I, J, K, L ou M}
+\fichemachine{3}{m3}{\avistrois}{N, O, P, Q, R ou S}
+\fichemachine{4}{m4}{\avisquatre}{T, U, V, W, X, Y ou Z}
 
-\begin{enumerate}[leftmargin=*,itemsep=4pt]
-\item \textbf{Étape 1 (5 min), chaque groupe seul :} comptez les mots de \emph{votre} fragment. On ne compte que les mots d'au moins 4 lettres, en minuscules (« Qualité » et « qualité » sont le même mot).
-\item \textbf{Étape 2 (3 min) :} écrivez un post-it par mot distinct, sous la forme \texttt{mot : nombre}.
-\item \textbf{Étape 3 (5 min) :} portez chaque post-it au groupe responsable de la lettre initiale du mot :
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|}\hline
-Groupe 1 & Groupe 2 & Groupe 3 & Groupe 4 & Groupe 5 & Groupe 6\\\hline
-A à C & D à H & I à L & M à P & Q à S & T à Z\\\hline
+% Fiche du serveur seul
+{\Large\textbf{Activité : diviser pour régner}}\hfill{\Large\textbf{Le serveur seul}}\par\medskip
+Vous faites la course, seul, contre les 4 machines. Vous comptez \textbf{tous les mots des 4 avis}, puis vous écrivez vos totaux au tableau et levez la main.\par\medskip
+\begin{tcolorbox}[colback=black!3,colframe=black!60,title={Les 4 avis}]
+\large\hyphenpenalty=10000
+\textbf{1.} \avisun\par\smallskip
+\textbf{2.} \avisdeux\par\smallskip
+\textbf{3.} \avistrois\par\smallskip
+\textbf{4.} \avisquatre
+\end{tcolorbox}
+\regles\par\medskip
+Écrivez chaque mot \textbf{une seule fois} dans la grille (au verso s'il le faut), avec le nombre total de fois où il apparaît dans les 4 avis.\par\medskip
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|}\hline
+\textbf{mot} & \textbf{nombre} & \textbf{mot} & \textbf{nombre}\\\hline
+\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot
 \end{tabular}
-\end{center}
-\item \textbf{Étape 4 (5 min) :} chaque groupe additionne les post-it reçus, mot par mot, et écrit ses totaux au tableau.
-\item \textbf{Étape 5 :} la classe lit les 10 mots les plus fréquents. Quel groupe a fini en dernier ? Pourquoi ?
-\end{enumerate}
-
-\vspace{4mm}
-\noindent\textit{Découpez la page suivante en six fiches, une par groupe.}
-
 \newpage
-\fiche{1}{Livraison rapide et colis bien emballé. Le service client répond vite. Qualité correcte pour le prix, je recommande Qissaria à ma famille.}
-\fiche{2}{Colis arrivé en retard, livraison trop lente. Le service client ne répond pas. Qualité moyenne, prix trop élevé. Déçu par Qissaria.}
-\fiche{3}{Tapis mzyan bzaf, livraison rapide. Prix correct, qualité au rendez-vous. Service client aimable, colis bien emballé. Merci Qissaria.}
-\fiche{4}{Téléphone reçu en deux jours, livraison rapide. Qualité excellente, prix raisonnable. Je recommande ce service à tous mes amis.}
-\fiche{5}{Livraison lente, colis abîmé, téléphone rayé. Service client injoignable, remboursement trop long. Qualité décevante pour ce prix.}
-\fiche{6}{Lampe zwina bzaf, livraison rapide, colis complet. Qualité parfaite, prix bas. Service client efficace, merci Qissaria, je recommande.}
+{\Large\textbf{Le serveur seul : suite de la grille}}\par\medskip
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|p{5.4cm}|>{\centering\arraybackslash}p{2.6cm}|}\hline
+\textbf{mot} & \textbf{nombre} & \textbf{mot} & \textbf{nombre}\\\hline
+\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot\lmot
+\end{tabular}
+\par\bigskip
+\textbf{Temps à l'arrivée :} \rule{3cm}{0.4pt}
+
 \end{document}

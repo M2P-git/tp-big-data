@@ -8,7 +8,7 @@ Cette séance se fait sur papier. Deux activités :
 
 Fiches à imprimer : [`fiches_mapreduce_papier.pdf`](fiches_mapreduce_papier.pdf) (source LaTeX à côté, texte brut dans [`fragments.txt`](fragments.txt)).
 
-Six groupes comptent les mots de six fragments d'avis clients, échangent des post-it selon la lettre initiale, puis additionnent. Gardez vos post-it : en S4, vous écrirez le même traitement en Python et vous le lancerez sur un cluster Hadoop.
+Une course : 4 « machines » (un étudiant chacune) contre un « serveur seul ». Chaque machine compte les mots d'un avis client, trie ses mots sur 4 post-it selon la première lettre (A à F, G à M, N à S, T à Z), distribue les post-it, puis additionne ceux qu'elle reçoit. Pendant ce temps, le serveur seul compte les 4 avis à lui tout seul. Une fiche recto-verso par personne. Gardez vos post-it : en S4, vous écrirez le même traitement en Python et vous le lancerez sur un cluster Hadoop.
 
 ## 2. La volumétrie de Qissaria (30 min)
 
