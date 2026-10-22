@@ -60,7 +60,7 @@ Notez vos mesures : vous les comparerez au débit de pandas mesuré dans le note
 
 ### Le notebook
 
-Ouvrir `tp/s2/limite_memoire.ipynb`, et suivre les quatre checkpoints.
+Ouvrir `tp/s2/limite_memoire.ipynb`, et suivre les quatre checkpoints (étapes 7 à 10 des transparents ; les mesures ci-dessus sont les étapes 4 et 5).
 
 Le conteneur Jupyter est volontairement limité à 2 Go de mémoire (voir `compose.yaml`) : c'est notre « petit serveur ».
 
