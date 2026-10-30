@@ -24,6 +24,7 @@ services:
     ports:
       - "8888:8888"
     mem_limit: 2g                     # limite volontaire : c'est le sujet de S2
+    memswap_limit: 2g                 # mémoire + swap = 2g : pas de swap (sinon Docker en ajoute 2g)
     volumes:
       - ./:/home/jovyan/work
     command: ["start-notebook.py", "--IdentityProvider.token=", "--ServerApp.root_dir=/home/jovyan/work"]
