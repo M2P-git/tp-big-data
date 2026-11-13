@@ -1,0 +1,3 @@
+# Les données brutes ne vont pas dans Git : seul le mode d emploi du dossier y va.
+donnees/*
+!donnees/LISEZMOI.txt

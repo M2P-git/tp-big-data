@@ -1,0 +1,308 @@
+# Cluster du projet de fin de module : chaque couche tourne sur plusieurs nœuds.
+#
+# Un profil par couche. On ne lance que les couches de son sujet, par exemple :
+#   docker compose --profile hdfs --profile spark up -d       # préparer
+#   docker compose --profile mongo up -d                      # servir
+#   docker compose --profile hdfs --profile spark --profile kafka --profile redis up -d
+#
+#   docker compose --profile '*' stop      # arrête tout en gardant toutes les données
+#   docker compose --profile '*' down      # efface les bases et les topics ; HDFS est gardé
+#   docker compose --profile '*' down -v   # efface tout, HDFS compris
+#
+# HDFS est le lac de données : il survit à down. Les bases se reconstruisent
+# depuis HDFS en relançant votre pipeline, qui doit donc être rejouable.
+#
+# Interfaces web : Jupyter http://localhost:8888, Spark http://localhost:8080,
+# application Spark http://localhost:4040, HDFS http://localhost:9870,
+# Neo4j http://localhost:7474.
+
+name: projet-efm
+
+networks:
+  projet: {}
+
+volumes:
+  hdfs-namenode: {}
+  hdfs-datanode1: {}
+  hdfs-datanode2: {}
+  hdfs-datanode3: {}
+
+x-hadoop: &hadoop
+  image: apache/hadoop:3.5.0          # image x86 seulement : émulée, donc plus lente, sur un PC ARM
+  env_file: ./hadoop.env
+  profiles: ["hdfs"]
+  networks: [projet]
+  depends_on:
+    hdfs-droits: {condition: service_completed_successfully}
+
+x-datanode: &datanode
+  <<: *hadoop
+  command: ["hdfs", "datanode"]
+  environment:
+    HDFS_DATANODE_OPTS: "-Xmx256m"
+  mem_limit: 640m
+
+x-spark: &spark
+  image: projet-efm/spark:2026-10-19
+  build: ./spark
+  profiles: ["spark"]
+  networks: [projet]
+
+x-worker: &worker
+  <<: *spark
+  environment:
+    SPARK_DAEMON_MEMORY: 256m
+  mem_limit: 1536m
+  depends_on: [spark-master]
+  healthcheck: {disable: true}        # le contrôle hérité de l'image surveille Jupyter
+
+x-cassandra-env: &cassandra-env
+  CASSANDRA_CLUSTER_NAME: projet-efm
+  CASSANDRA_SEEDS: cassandra1
+  MAX_HEAP_SIZE: 512M
+  HEAP_NEWSIZE: 100M
+
+x-cassandra: &cassandra
+  image: cassandra:5.0
+  networks: [projet]
+  mem_limit: 1536m
+  healthcheck:
+    test: ["CMD-SHELL", "cqlsh -e 'SELECT release_version FROM system.local' >/dev/null 2>&1"]
+    interval: 10s
+    timeout: 10s
+    retries: 30
+    start_period: 40s
+
+x-redis: &redis
+  image: redis:8.0
+  profiles: ["redis"]
+  networks: [projet]
+  command: ["redis-server", "--cluster-enabled", "yes", "--cluster-node-timeout", "5000",
+            "--appendonly", "no", "--save", "", "--maxmemory", "128mb", "--protected-mode", "no"]
+  mem_limit: 192m
+
+x-kafka-env: &kafka-env
+  CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+  KAFKA_PROCESS_ROLES: broker,controller
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093
+  KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  KAFKA_NUM_PARTITIONS: 3
+  KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+  KAFKA_MIN_INSYNC_REPLICAS: 1
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+  KAFKA_HEAP_OPTS: "-Xmx384m -Xms384m"
+
+x-kafka: &kafka
+  image: apache/kafka:4.1.0
+  profiles: ["kafka"]
+  networks: [projet]
+  mem_limit: 768m
+
+x-mongod: &mongod
+  image: mongo:8.0
+  profiles: ["mongo"]
+  networks: [projet]
+  mem_limit: 512m
+
+services:
+
+  # ------------------------------------------------------------------ HDFS
+  # Un NameNode et trois DataNodes ; deux copies de chaque bloc de 16 Mo.
+  hdfs-droits:                        # donne les volumes à l'utilisateur hadoop, puis s'arrête
+    image: apache/hadoop:3.5.0
+    profiles: ["hdfs"]
+    user: root
+    entrypoint: ["chown", "-R", "hadoop:users", "/v/nn", "/v/dn1", "/v/dn2", "/v/dn3"]
+    volumes:
+      - hdfs-namenode:/v/nn
+      - hdfs-datanode1:/v/dn1
+      - hdfs-datanode2:/v/dn2
+      - hdfs-datanode3:/v/dn3
+    restart: "no"
+
+  namenode:
+    <<: *hadoop
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"   # formatage au premier démarrage
+      ENSURE_NAMENODE_CLUSTERID: "projet-efm"
+      HDFS_NAMENODE_OPTS: "-Xmx384m"
+    ports: ["9870:9870"]
+    volumes:
+      - hdfs-namenode:/tmp/hadoop-hadoop
+      - ./donnees:/donnees            # fichiers bruts à charger avec hdfs dfs -put
+    mem_limit: 768m
+
+  datanode1:
+    <<: *datanode
+    hostname: datanode1
+    volumes: ["hdfs-datanode1:/tmp/hadoop-hadoop"]
+  datanode2:
+    <<: *datanode
+    hostname: datanode2
+    volumes: ["hdfs-datanode2:/tmp/hadoop-hadoop"]
+  datanode3:
+    <<: *datanode
+    hostname: datanode3
+    volumes: ["hdfs-datanode3:/tmp/hadoop-hadoop"]
+
+  # ----------------------------------------------------------------- Spark
+  # Un master, deux workers de 2 cœurs, et Jupyter qui joue le rôle du driver.
+  spark-master:
+    <<: *spark
+    hostname: spark-master
+    command: ["/usr/local/spark/bin/spark-class", "org.apache.spark.deploy.master.Master",
+              "--host", "spark-master"]
+    environment:
+      SPARK_DAEMON_MEMORY: 256m
+    ports: ["8080:8080"]
+    mem_limit: 512m
+    healthcheck: {disable: true}
+
+  spark-worker1:
+    <<: *worker
+    hostname: spark-worker1
+    command: ["/usr/local/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
+              "spark://spark-master:7077", "--cores", "2", "--memory", "1g",
+              "--work-dir", "/tmp/spark-work"]
+    ports: ["8081:8081"]
+  spark-worker2:
+    <<: *worker
+    hostname: spark-worker2
+    command: ["/usr/local/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
+              "spark://spark-master:7077", "--cores", "2", "--memory", "1g",
+              "--work-dir", "/tmp/spark-work"]
+    ports: ["8082:8081"]
+
+  jupyter:
+    <<: *spark
+    hostname: jupyter
+    command: ["start-notebook.py", "--IdentityProvider.token=",
+              "--ServerApp.root_dir=/home/jovyan/work"]
+    ports: ["8888:8888", "4040:4040"]
+    volumes:
+      - ./travail:/home/jovyan/work            # votre code et vos notebooks
+      - ./donnees:/home/jovyan/donnees         # fichiers locaux, pour le producteur Kafka
+      - ./exemples:/home/jovyan/exemples:ro
+    mem_limit: 2g
+    depends_on: [spark-master]
+
+  # --------------------------------------------------------------- MongoDB
+  # Deux shards, un serveur de configuration, un routeur mongos.
+  mongo-config:
+    <<: *mongod
+    hostname: mongo-config
+    command: ["mongod", "--configsvr", "--replSet", "cfg", "--port", "27019",
+              "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+  mongo-shard1:
+    <<: *mongod
+    hostname: mongo-shard1
+    command: ["mongod", "--shardsvr", "--replSet", "shard1", "--port", "27018",
+              "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+  mongo-shard2:
+    <<: *mongod
+    hostname: mongo-shard2
+    command: ["mongod", "--shardsvr", "--replSet", "shard2", "--port", "27018",
+              "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+  mongo-router:
+    <<: *mongod
+    hostname: mongo-router
+    command: ["mongos", "--configdb", "cfg/mongo-config:27019", "--bind_ip_all", "--port", "27017"]
+    ports: ["27017:27017"]
+    mem_limit: 256m
+    depends_on: [mongo-config]
+  mongo-init:
+    <<: *mongod
+    entrypoint: ["bash", "/init.sh"]
+    volumes: ["./init/mongo-init.sh:/init.sh:ro"]
+    depends_on: [mongo-config, mongo-shard1, mongo-shard2, mongo-router]
+    restart: "no"
+    mem_limit: 256m
+
+  # ------------------------------------------------------------- Cassandra
+  # Deux nœuds ; le profil cassandra3 en ajoute un troisième (machine de 16 Go).
+  cassandra1:
+    <<: *cassandra
+    profiles: ["cassandra"]
+    hostname: cassandra1
+    environment:
+      <<: *cassandra-env
+  cassandra2:
+    <<: *cassandra
+    profiles: ["cassandra"]
+    hostname: cassandra2
+    environment:
+      <<: *cassandra-env
+    depends_on:
+      cassandra1: {condition: service_healthy}
+  cassandra3:
+    <<: *cassandra
+    profiles: ["cassandra3"]
+    hostname: cassandra3
+    environment:
+      <<: *cassandra-env
+    depends_on:
+      cassandra2: {condition: service_healthy}
+
+  # ----------------------------------------------------------------- Redis
+  # Redis Cluster : trois nœuds principaux et trois répliques.
+  redis1: {<<: *redis, hostname: redis1}
+  redis2: {<<: *redis, hostname: redis2}
+  redis3: {<<: *redis, hostname: redis3}
+  redis4: {<<: *redis, hostname: redis4}
+  redis5: {<<: *redis, hostname: redis5}
+  redis6: {<<: *redis, hostname: redis6}
+  redis-init:
+    <<: *redis
+    command: []
+    entrypoint: ["bash", "/init.sh"]
+    volumes: ["./init/redis-init.sh:/init.sh:ro"]
+    depends_on: [redis1, redis2, redis3, redis4, redis5, redis6]
+    restart: "no"
+
+  # ----------------------------------------------------------------- Kafka
+  # Trois brokers, qui sont aussi les contrôleurs du cluster (mode KRaft).
+  kafka1:
+    <<: *kafka
+    hostname: kafka1
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+  kafka2:
+    <<: *kafka
+    hostname: kafka2
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 2
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9092
+  kafka3:
+    <<: *kafka
+    hostname: kafka3
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9092
+
+  # ----------------------------------------------------------------- Neo4j
+  # Une seule instance : le cluster Neo4j est réservé à l'édition Enterprise.
+  neo4j:
+    image: neo4j:5.26-community
+    profiles: ["neo4j"]
+    networks: [projet]
+    hostname: neo4j
+    ports: ["7474:7474", "7687:7687"]
+    environment:
+      NEO4J_AUTH: neo4j/projet-efm
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    mem_limit: 1280m

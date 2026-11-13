@@ -20,8 +20,13 @@ Ce dépôt contient tout ce qu'il faut pour les manipulations : l'environnement 
 ├── hadoop/hadoop.env       # configuration du cluster Hadoop
 ├── data/                   # données (gros fichiers hors git) et échantillons
 ├── scripts/                # génération de données, vérification du poste
+├── projet-efm/             # projet de fin de module : sujets, fiches, cluster
 └── tp/                     # une séance par dossier
 ```
+
+## Projet de fin de module (EFM)
+
+Le dossier [`projet-efm`](projet-efm) contient les dix sujets du projet, leurs fiches détaillées et le cluster sur lequel tourne votre projet. Commencez par son [README](projet-efm/README.md).
 
 ## Prérequis
 

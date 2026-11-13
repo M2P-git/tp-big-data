@@ -1,0 +1,1 @@
+Vos fichiers bruts. Ils sont visibles dans le NameNode sous /donnees, pour hdfs dfs -put.
