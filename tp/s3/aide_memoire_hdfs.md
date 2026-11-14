@@ -27,6 +27,9 @@ Elles ressemblent aux commandes Linux, précédées de `hdfs dfs`.
 | `hdfs dfsadmin -printTopology` | racks et DataNodes |
 | `hdfs fsck /chemin -files -blocks -locations` | blocs d'un fichier et DataNodes qui les portent |
 | `hdfs fsck /` | santé globale : blocs manquants, sous-répliqués |
+| `jps` | les démons Java qui tournent sur la machine : NameNode, DataNode |
+| `hdfs getconf -confKey dfs.replication` | la valeur d'un réglage, telle que Hadoop l'utilise |
+| `hdfs getconf -namenodes` | la machine du NameNode |
 
 ## Interfaces web
 
@@ -36,6 +39,8 @@ Elles ressemblent aux commandes Linux, précédées de `hdfs dfs`.
 | <http://localhost:8088> | ResourceManager (YARN), utile en S4 |
 
 ## Réglages de notre cluster (fichier `hadoop/hadoop.env`)
+
+Chaque ligne de `hadoop.env` s'écrit `FICHIER.XML_propriété=valeur`. Au démarrage de chaque conteneur, l'image la recopie dans `/opt/hadoop/etc/hadoop/fichier.xml`. Une propriété absente garde sa valeur par défaut.
 
 | Propriété | Valeur | Valeur par défaut de Hadoop |
 | --- | --- | --- |

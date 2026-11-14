@@ -9,6 +9,8 @@
 
 name: bigdata-nosql
 
+# Les 7 machines Hadoop partent de la même image : la ligne command donne son rôle
+# à chacune, et hadoop/hadoop.env ses réglages (recopiés en XML au démarrage).
 x-hadoop: &hadoop
   image: apache/hadoop:3.5.0          # image officielle, amd64 seulement (émulée sur ARM)
   env_file: ./hadoop/hadoop.env
@@ -33,8 +35,8 @@ services:
   # ---------------------------------------------------------------- hadoop
   namenode:
     <<: *hadoop
-    hostname: namenode
-    command: ["hdfs", "namenode"]
+    hostname: namenode                # son nom sur le réseau : hdfs://namenode dans hadoop.env
+    command: ["hdfs", "namenode"]     # son rôle : lancer le démon NameNode
     ports:
       - "9870:9870"                   # interface web HDFS : http://localhost:9870
     environment:
@@ -45,20 +47,20 @@ services:
 
   datanode:
     <<: *hadoop
-    command: ["hdfs", "datanode"]
+    command: ["hdfs", "datanode"]     # son rôle : lancer un démon DataNode
     deploy:
       replicas: 4                     # 4 DataNodes pour une réplication x3
 
   resourcemanager:
     <<: *hadoop
     hostname: resourcemanager
-    command: ["yarn", "resourcemanager"]
+    command: ["yarn", "resourcemanager"]   # son rôle : lancer le ResourceManager
     ports:
       - "8088:8088"                   # interface web YARN : http://localhost:8088
 
   nodemanager:
     <<: *hadoop
-    command: ["yarn", "nodemanager"]
+    command: ["yarn", "nodemanager"]  # son rôle : lancer un NodeManager
 
 networks:
   cluster: {}

@@ -30,6 +30,28 @@ hdfs dfsadmin -report
 
 **Q1.** Combien de DataNodes sont vivants ? Quelle capacité totale annonce HDFS ? Pourquoi ce chiffre est-il trompeur dans notre TP ? (indice : où sont physiquement les 4 disques ?)
 
+### La configuration, vue de l'intérieur
+
+Le cluster est décrit par deux fichiers, à la racine du dépôt : `compose.yaml`, qui donne les machines et le rôle de chacune (ligne `command`), et `hadoop/hadoop.env`, qui donne les réglages de Hadoop. Ouvrez-les dans VS Code.
+
+Dans le NameNode :
+
+```bash
+jps                                        # les programmes Java de cette machine : NameNode
+cat /opt/hadoop/etc/hadoop/hdfs-site.xml   # fabriqué au démarrage, à partir de hadoop.env
+hdfs getconf -confKey dfs.replication      # la valeur que HDFS utilise : 3
+hdfs getconf -namenodes                    # la machine du NameNode : namenode
+```
+
+Dans un second PowerShell, à la racine du dépôt (il resservira au checkpoint 4) :
+
+```bash
+docker compose exec datanode jps                                  # DataNode
+docker compose ps --no-trunc --format "{{.Name}}  {{.Command}}"   # la commande de chaque conteneur
+```
+
+Les 7 conteneurs partent de la même image : c'est la ligne `command` de `compose.yaml` qui fait de l'un un NameNode, de l'autre un DataNode. Chaque ligne de `hadoop.env` s'écrit `FICHIER.XML_propriété=valeur` ; au démarrage, l'image la recopie dans `/opt/hadoop/etc/hadoop/fichier.xml`. Le fichier `hdfs-site.xml` ne finit pas par un retour à la ligne : l'invite suivante se colle à `</configuration>`, ce n'est pas une erreur.
+
 ## Checkpoint 2 : charger le clickstream (15 min)
 
 ```bash
@@ -106,3 +128,41 @@ Attention : `docker compose --profile hadoop down` **efface** le cluster et tout
 ## Dossier d'équipe
 
 Plan de stockage de votre cas : volume brut, réplication, nombre de DataNodes.
+
+## Pour aller plus loin : votre propre cluster
+
+À faire chez vous, après la séance : le cluster du TP doit garder ses données jusqu'à S4.
+
+1. Copier les deux fichiers dans un dossier à vous, depuis la racine du dépôt :
+
+   ```bash
+   mkdir mon-cluster
+   cp compose.yaml mon-cluster/
+   cp hadoop/hadoop.env mon-cluster/
+   ```
+
+2. Dans `mon-cluster/compose.yaml`, changer :
+   - le nom du projet : `name: mon-cluster`. **Sans cette ligne, Docker prend le fichier pour celui du TP, recrée ses conteneurs, et le contenu de HDFS est perdu** ;
+   - le chemin de la configuration : `env_file: ./hadoop.env` ;
+   - les dossiers partagés : `../data:/data` et `../tp:/tp` ;
+   - le nombre de DataNodes, par exemple `replicas: 3`.
+3. Dans `mon-cluster/hadoop.env`, choisir les réglages, par exemple `HDFS-SITE.XML_dfs.replication=2`. La liste des propriétés et de leurs valeurs par défaut : <https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml>.
+4. Arrêter le cluster du TP, démarrer le vôtre, vérifier :
+
+   ```bash
+   docker compose --profile hadoop stop    # le cluster du TP s'arrête, ses données restent
+   cd mon-cluster
+   docker compose --profile hadoop up -d
+   docker compose exec namenode hdfs getconf -confKey dfs.replication    # 2
+   docker compose exec namenode hdfs dfsadmin -report                    # Live datanodes (3)
+   ```
+
+5. Revenir au TP :
+
+   ```bash
+   docker compose --profile hadoop down    # efface le cluster de mon-cluster/
+   cd ..
+   docker compose --profile hadoop start   # le cluster du TP repart, avec ses données
+   ```
+
+Une modification de `hadoop.env` n'agit qu'au démarrage : `docker compose up -d` recrée les conteneurs concernés, ce qui vide leur HDFS. Le cluster du projet de fin de module (`projet-efm/cluster/`) est construit de la même façon.
