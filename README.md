@@ -5,7 +5,7 @@ Enseignant : Dr Paul Menounga Mbilong.
 
 Ce dépôt contient tout ce qu'il faut pour les manipulations : l'environnement Docker, les données de Qissaria (notre place de marché fictive), les notebooks et les scripts. Le cours lui-même est dans le support Quarto.
 
-## Contenu (mois 1)
+## Contenu
 
 | Séance | Thème | Dossier | Environnement |
 | --- | --- | --- | --- |
@@ -13,6 +13,7 @@ Ce dépôt contient tout ce qu'il faut pour les manipulations : l'environnement 
 | S2 | Une machine ne suffit plus | [`tp/s2`](tp/s2) | profil `socle` (Jupyter) |
 | S3 | HDFS, stocker sur plusieurs machines | [`tp/s3`](tp/s3) | profil `hadoop` |
 | S4 | MapReduce et YARN | [`tp/s4`](tp/s4) | profil `hadoop` |
+| S5 | Spark et PySpark | [`tp/s5`](tp/s5) | profil `spark` |
 
 ```
 .
@@ -51,6 +52,8 @@ python scripts/verifier_env.py                 # tout doit être OK ou ATTENTION
 docker compose --profile socle up -d           # S2 : Jupyter sur http://localhost:8888
 docker compose --profile hadoop up -d          # S3, S4 : HDFS sur :9870, YARN sur :8088
 python scripts/verifier_env.py --cluster       # vérifier le cluster Hadoop
+docker compose --profile spark up -d           # S5 : Spark sur :8080, Jupyter sur :8888
+python scripts/verifier_env.py --spark         # vérifier le cluster Spark
 ```
 
 | Commande | Effet |

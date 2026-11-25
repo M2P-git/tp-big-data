@@ -4,6 +4,8 @@
 #   docker compose --profile socle up -d      # S2 : Jupyter (Python, pandas, PySpark)
 #   docker compose --profile hadoop up -d     # S3 et S4 : cluster Hadoop
 #   docker compose --profile hadoop down      # arrête ET efface le cluster
+#   docker compose --profile spark up -d      # S5 : Spark (master, 2 workers, Jupyter)
+#   docker compose --profile hadoop --profile spark up -d   # S5 avec HDFS
 #
 # Images : à télécharger une fois (ou à charger depuis la clé USB, voir README).
 
@@ -16,6 +18,18 @@ x-hadoop: &hadoop
   env_file: ./hadoop/hadoop.env
   profiles: ["hadoop"]
   networks: [cluster]
+
+# Les 4 machines Spark (S5) partent de l'image du Jupyter, à une date fixée.
+x-spark: &spark
+  image: quay.io/jupyter/pyspark-notebook:2026-10-19
+  profiles: ["spark"]
+  networks: [cluster]
+  environment:
+    PYSPARK_PYTHON: python3
+    SPARK_DAEMON_MEMORY: 256m
+  volumes:
+    - ./:/home/jovyan/work:ro         # les workers lisent data/ sans pouvoir l'écrire...
+    - ./sorties:/home/jovyan/work/sorties   # ... mais écrivent les résultats (Parquet) ici
 
 services:
 
@@ -61,6 +75,52 @@ services:
   nodemanager:
     <<: *hadoop
     command: ["yarn", "nodemanager"]  # son rôle : lancer un NodeManager
+
+  # ---------------------------------------------------------------- spark (S5)
+  # Un master, deux workers (2 cœurs, 1 Go chacun) et un Jupyter qui joue le rôle du driver.
+  # Même image partout : le Python du driver et celui des executors doivent être identiques.
+  # Le dépôt est monté dans les quatre conteneurs : chaque executor lit lui-même data/.
+  spark-master:
+    <<: *spark
+    hostname: spark-master
+    command: ["spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master"]
+    ports:
+      - "8080:8080"                   # interface du master : http://localhost:8080
+    mem_limit: 512m
+
+  spark-worker:
+    <<: *spark
+    command: ["spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077",
+              "--cores", "2", "--memory", "1g", "--work-dir", "/tmp/spark-work"]
+    depends_on: [spark-master]
+    deploy:
+      replicas: 2                     # 2 workers : 2 executors de 2 cœurs
+    mem_limit: 1536m
+
+  jupyter-spark:
+    <<: *spark
+    hostname: jupyter-spark
+    command: ["start-notebook.py", "--IdentityProvider.token=", "--ServerApp.root_dir=/home/jovyan/work"]
+    ports:
+      - "8888:8888"                   # le notebook : http://localhost:8888
+      - "4040:4040"                   # l'application Spark en cours : http://localhost:4040
+    environment:
+      PYSPARK_PYTHON: python3
+      PYTHONPATH: /usr/local/spark/python:/usr/local/spark/python/lib/py4j-0.10.9.9-src.zip
+      # La connexion au cluster : le code des notebooks n'a pas à la connaître.
+      PYSPARK_SUBMIT_ARGS: >-
+        --master spark://spark-master:7077
+        --conf spark.driver.host=jupyter-spark
+        --conf spark.driver.bindAddress=0.0.0.0
+        --conf spark.cores.max=4
+        --conf spark.executor.cores=2
+        --conf spark.executor.memory=768m
+        --driver-memory 768m
+        pyspark-shell
+    volumes:
+      - ./:/home/jovyan/work          # le notebook peut écrire (résultats, Parquet)
+    depends_on: [spark-master]
+    mem_limit: 2g
 
 networks:
   cluster: {}

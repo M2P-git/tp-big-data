@@ -5,6 +5,8 @@ data/*.parquet
 !data/echantillon/*
 
 # Sorties des TP
+sorties/*
+!sorties/.gitkeep
 tp/**/sortie_*/
 tp/**/*.aux
 tp/**/*.log

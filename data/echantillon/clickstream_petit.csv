@@ -1,0 +1,19 @@
+event_time,event_type,product_id,category_id,category_code,brand,price,user_id,user_session
+2026-08-01 10:00:00 UTC,view,1001,201,electronics.smartphone,novatek,1200.00,101,s01
+2026-08-01 10:01:00 UTC,view,1001,201,electronics.smartphone,novatek,1200.00,102,s02
+2026-08-01 10:02:00 UTC,view,1002,202,apparel.shoes,atlas,350.00,103,s03
+2026-08-01 10:03:00 UTC,view,1003,203,home.decor.carpet,sahara,800.00,104,s04
+2026-08-01 10:04:00 UTC,view,1004,204,kids.toys,,90.00,105,s05
+2026-08-01 10:05:00 UTC,view,1002,202,apparel.shoes,atlas,350.00,106,s06
+2026-08-01 10:06:00 UTC,view,1001,201,electronics.smartphone,novatek,1200.00,107,s07
+2026-08-01 10:07:00 UTC,view,1002,202,apparel.shoes,atlas,350.00,108,s08
+2026-08-01 10:08:00 UTC,view,1001,201,electronics.smartphone,novatek,1200.00,109,s09
+2026-08-01 10:09:00 UTC,cart,1002,202,apparel.shoes,atlas,350.00,103,s03
+2026-08-01 10:10:00 UTC,cart,1002,202,apparel.shoes,atlas,350.00,106,s06
+2026-08-01 10:11:00 UTC,cart,1001,201,electronics.smartphone,novatek,1200.00,101,s01
+2026-08-01 10:12:00 UTC,purchase,1001,201,electronics.smartphone,novatek,1200.00,101,s01
+2026-08-01 10:13:00 UTC,purchase,1001,201,electronics.smartphone,novatek,1200.00,102,s02
+2026-08-01 10:14:00 UTC,purchase,1001,201,electronics.smartphone,novatek,1200.00,107,s07
+2026-08-01 10:15:00 UTC,purchase,1002,202,apparel.shoes,atlas,350.00,103,s03
+2026-08-01 10:16:00 UTC,purchase,1002,202,apparel.shoes,atlas,350.00,106,s06
+2026-08-01 10:17:00 UTC,purchase,1003,203,home.decor.carpet,sahara,800.00,104,s04

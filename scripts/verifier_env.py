@@ -3,6 +3,7 @@
 
     python scripts/verifier_env.py             # avant de démarrer quoi que ce soit
     python scripts/verifier_env.py --cluster   # quand le profil hadoop tourne
+    python scripts/verifier_env.py --spark     # quand le profil spark tourne (S5)
 
 Chaque ligne affiche OK, ATTENTION ou ECHEC avec la marche à suivre.
 """
@@ -10,11 +11,13 @@ Chaque ligne affiche OK, ATTENTION ou ECHEC avec la marche à suivre.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import shutil
 import socket
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
@@ -79,17 +82,19 @@ def verifier_poste() -> None:
          "prévoir 15 Go (images Docker et données) : libérer de la place")
 
     code, sortie = lancer(["docker", "compose", "--profile", "socle", "--profile",
-                           "hadoop", "config", "--quiet"])
+                           "hadoop", "--profile", "spark", "config", "--quiet"])
     dire("OK" if code == 0 else "ECHEC", "compose.yaml valide",
          sortie.splitlines()[-1] if sortie else "")
 
     code, sortie = lancer(["docker", "image", "ls", "--format", "{{.Repository}}:{{.Tag}}"])
     images = set(sortie.split())
-    for image in ["apache/hadoop:3.5.0", "quay.io/jupyter/pyspark-notebook:latest"]:
+    for image in ["apache/hadoop:3.5.0", "quay.io/jupyter/pyspark-notebook:latest",
+                  "quay.io/jupyter/pyspark-notebook:2026-10-19"]:
         dire("OK" if image in images else "ATTENTION", f"image {image}",
              "docker compose pull, ou docker load -i depuis la clé USB")
 
-    for port, service in [(8888, "Jupyter"), (9870, "HDFS"), (8088, "YARN")]:
+    for port, service in [(8888, "Jupyter"), (9870, "HDFS"), (8088, "YARN"),
+                          (8080, "master Spark"), (4040, "application Spark")]:
         with socket.socket() as s:
             libre = s.connect_ex(("127.0.0.1", port)) != 0
         dire("OK" if libre else "ATTENTION", f"port {port} ({service}) "
@@ -120,13 +125,43 @@ def verifier_cluster() -> None:
          "docker compose logs nodemanager")
 
 
+def verifier_spark() -> None:
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:8080/json/", timeout=10) as reponse:
+            etat = json.load(reponse)
+    except (OSError, ValueError):
+        dire("ECHEC", "le master Spark ne répond pas sur http://localhost:8080",
+             "docker compose --profile spark up -d, puis attendre 20 s")
+        return
+    dire("OK", f"master Spark {etat.get('url', '?')}")
+    vivants = [w for w in etat.get("workers", []) if w.get("state") == "ALIVE"]
+    coeurs = sum(w.get("cores", 0) for w in vivants)
+    dire("OK" if len(vivants) >= 2 else "ECHEC", f"{len(vivants)} worker(s) vivant(s), {coeurs} cœurs",
+         "attendre 20 s puis relancer ; sinon docker compose logs spark-worker")
+    code, sortie = lancer(["docker", "compose", "exec", "-T", "jupyter-spark", "python", "-c",
+                           "import pyspark; print(pyspark.__version__)"], delai=60)
+    dire("OK" if code == 0 else "ECHEC", f"Jupyter (driver) : PySpark {sortie if code == 0 else 'absent'}",
+         "docker compose --profile spark up -d ; sinon docker compose logs jupyter-spark")
+    for nom in ["data/echantillon/clickstream_petit.csv", "data/clickstream_aout.csv"]:
+        present = (RACINE / nom).exists()
+        dire("OK" if present else "ATTENTION", f"{nom} {'présent' if present else 'absent'}",
+             "git pull pour le petit fichier ; clé USB ou scripts/generer_clickstream.py pour celui d'août")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cluster", action="store_true",
                         help="vérifier le cluster Hadoop en marche")
+    parser.add_argument("--spark", action="store_true",
+                        help="vérifier le cluster Spark en marche (S5)")
     args = parser.parse_args()
     print(f"Dépôt : {RACINE}\n")
-    verifier_cluster() if args.cluster else verifier_poste()
+    if args.spark:
+        verifier_spark()
+    elif args.cluster:
+        verifier_cluster()
+    else:
+        verifier_poste()
     print(f"\nBilan : {resultats['OK']} OK, {resultats['ATTENTION']} attention, "
           f"{resultats['ECHEC']} échec(s)")
     return 1 if resultats["ECHEC"] else 0
