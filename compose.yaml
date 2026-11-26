@@ -87,6 +87,11 @@ services:
     ports:
       - "8080:8080"                   # interface du master : http://localhost:8080
     mem_limit: 512m
+    healthcheck:                      # l'image vérifie Jupyter, absent ici : on vérifie l'interface du master
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
 
   spark-worker:
     <<: *spark
@@ -96,6 +101,11 @@ services:
     deploy:
       replicas: 2                     # 2 workers : 2 executors de 2 cœurs
     mem_limit: 1536m
+    healthcheck:                      # de même : l'interface du worker
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
 
   jupyter-spark:
     <<: *spark

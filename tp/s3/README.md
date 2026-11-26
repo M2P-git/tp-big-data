@@ -79,7 +79,7 @@ Recharger le fichier avec des blocs de 32 Mo :
 ```bash
 hdfs dfs -mkdir -p /qissaria/petits_blocs
 hdfs dfs -D dfs.blocksize=32m -put /data/clickstream_aout.csv /qissaria/petits_blocs/
-hdfs fsck /qissaria/petits_blocs -files -blocks | tail -20
+hdfs fsck /qissaria/petits_blocs -files -blocks | grep "Total blocks"
 ```
 
 **Q3.** Combien de blocs maintenant ? Pourquoi HDFS préfère-t-il de gros blocs ? (pensez au NameNode, qui garde en mémoire la liste de tous les blocs)
