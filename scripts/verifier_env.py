@@ -125,11 +125,27 @@ def verifier_cluster() -> None:
          "docker compose logs nodemanager")
 
 
-def verifier_spark() -> None:
+def etat_master() -> dict | None:
+    """L'état du master Spark (JSON de son interface), lu depuis le conteneur du master,
+    puis, à défaut, par le port 8080 de cette machine."""
+    code, sortie = lancer(["docker", "compose", "exec", "-T", "spark-master", "python3", "-c",
+                           "import urllib.request; print(urllib.request.urlopen("
+                           "'http://localhost:8080/json/', timeout=10).read().decode())"], delai=60)
+    if code == 0:
+        try:
+            return json.loads(sortie[sortie.find("{"):])
+        except ValueError:
+            pass
     try:
         with urllib.request.urlopen("http://127.0.0.1:8080/json/", timeout=10) as reponse:
-            etat = json.load(reponse)
+            return json.load(reponse)
     except (OSError, ValueError):
+        return None
+
+
+def verifier_spark() -> None:
+    etat = etat_master()
+    if etat is None:
         dire("ECHEC", "le master Spark ne répond pas sur http://localhost:8080",
              "docker compose --profile spark up -d, puis attendre 20 s")
         return
